@@ -1,0 +1,845 @@
+﻿@page "/items"
+@using bnmini_crm.Data
+@using bnmini_crm.Models
+@using Microsoft.JSInterop
+@using Microsoft.EntityFrameworkCore
+@using System.Text.Json
+@inject AppDbContext Db
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+
+<div id="tg-app">
+    <div class="tg-header">
+        <span class="tg-header-title" id="header-total"></span>
+        <span class="tg-header-user" id="user-name"></span>
+    </div>
+
+    <div class="tg-loading" id="loading">
+        <div class="tg-spinner"></div>
+        <p>Загрузка...</p>
+    </div>
+
+    <div class="tg-items-list" id="items-list" style="display:none"></div>
+
+    <!-- FAB кнопки внизу -->
+    <div class="fab-group" id="fab-group" style="display:none">
+        <button class="fab-cat" onclick="openCategories()">📂</button>
+        <button class="fab" id="fab" onclick="openCart()">
+            <span class="fab-icon">🛒</span>
+            <span class="fab-label">Корзина</span>
+            <span class="fab-badge" id="fab-badge">0</span>
+        </button>
+    </div>
+
+    <!-- Кнопка категорий когда корзина пуста -->
+    <button class="fab-cat-solo" id="fab-cat-solo" onclick="openCategories()">📂</button>
+
+    <!-- Корзина -->
+    <div class="sheet-overlay" id="overlay" style="display:none" onclick="closeCart()"></div>
+    <div class="sheet" id="sheet" style="display:none">
+        <div class="sheet-handle"></div>
+        <div class="sheet-header">
+            <span class="sheet-title">🛒 Корзина</span>
+            <button class="sheet-close" onclick="closeCart()">✕</button>
+        </div>
+        <div class="sheet-body" id="cart-body"></div>
+        <div class="sheet-footer">
+            <div class="cart-total">Итого: <strong id="cart-total">0 ₽</strong></div>
+            <div class="sheet-actions" id="sheet-actions">
+                <button class="btn-cancel" onclick="clearCart()">Очистить</button>
+                <button class="btn-submit" onclick="submitOrder()">Отправить заказ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Категории bottom sheet -->
+    <div class="sheet-overlay" id="cat-overlay" style="display:none" onclick="closeCategories()"></div>
+    <div class="sheet" id="cat-sheet" style="display:none">
+        <div class="sheet-handle"></div>
+        <div class="sheet-header">
+            <span class="sheet-title">📂 Категории</span>
+            <button class="sheet-close" onclick="closeCategories()">✕</button>
+        </div>
+        <div class="sheet-body" id="cat-body"></div>
+    </div>
+
+    <!-- Модал доставки -->
+    <div class="delivery-modal" id="delivery-modal" style="display:none">
+        <div class="delivery-sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-header">
+                <span class="sheet-title">📦 Оформление</span>
+                <button class="sheet-close" onclick="closeDeliveryModal()">✕</button>
+            </div>
+            <div class="delivery-body">
+                <label class="field-label">Телефон</label>
+                <input class="field-input" id="delivery-phone" type="tel" placeholder="+7 999 123 45 67" />
+                <label class="field-label" style="margin-top:16px">Адрес доставки</label>
+                <div class="address-chips" id="address-list"></div>
+                <input class="field-input" id="delivery-address" type="text" placeholder="Введите адрес..." />
+            </div>
+            <div class="delivery-footer">
+                <button class="btn-cancel" onclick="closeDeliveryModal()">Отмена</button>
+                <button class="btn-submit" onclick="confirmOrder()">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tg-toast" id="toast"></div>
+</div>
+
+<style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background: #efeff3;
+        font-family: -apple-system, 'SF Pro Text', 'Segoe UI', sans-serif;
+    }
+
+    #tg-app {
+        max-width: 480px;
+        margin: 0 auto;
+        min-height: 100vh;
+        background: #efeff3;
+        padding-bottom: 120px;
+    }
+
+    .tg-header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(239,239,243,0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        padding: 14px 16px 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+
+    .tg-header-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #000;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .tg-header-user {
+        font-size: 13px;
+        color: #8e8e93;
+        font-weight: 500;
+    }
+
+    .cat-btn {
+        width: 32px;
+        height: 32px;
+        background: #f2f2f7;
+        border: none;
+        border-radius: 50%;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #000;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 0.15s;
+    }
+
+        .cat-btn:active {
+            background: #e0e0e5;
+        }
+
+    .tg-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 60px 0;
+        color: #8e8e93;
+        font-size: 14px;
+        gap: 12px;
+    }
+
+    .tg-spinner {
+        width: 28px;
+        height: 28px;
+        border: 3px solid #e0e0e5;
+        border-top-color: #007aff;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .tg-items-list {
+        padding: 12px 16px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .tg-card {
+        background: #fff;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        display: flex;
+        flex-direction: column;
+    }
+
+        .tg-card:active {
+            transform: scale(0.98);
+        }
+
+    .tg-card-image-wrap {
+        width: 100%;
+        aspect-ratio: 4/5;
+        background: #f2f2f7;
+        overflow: hidden;
+    }
+
+    .tg-card-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .tg-card-image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+    }
+
+    .tg-card-body {
+        padding: 10px 12px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        flex: 1;
+    }
+
+    .tg-card-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #000;
+    }
+
+    .tg-card-desc {
+        font-size: 11px;
+        color: #8e8e93;
+        line-height: 1.45;
+        flex: 1;
+    }
+
+    .tg-card-footer {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+    .tg-card-price {
+        font-size: 15px;
+        font-weight: 700;
+        color: #007aff;
+    }
+
+    .tg-btn {
+        width: 100%;
+        text-align: center;
+        background: #007aff;
+        color: #fff;
+        border: none;
+        border-radius: 50px;
+        padding: 8px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .item-qty-control {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #f2f2f7;
+        border-radius: 50px;
+        padding: 2px;
+    }
+
+    .item-qty-btn {
+        width: 32px;
+        height: 32px;
+        background: #fff;
+        border: none;
+        border-radius: 50%;
+        font-size: 20px;
+        color: #007aff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        flex-shrink: 0;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .item-qty-val {
+        flex: 1;
+        text-align: center;
+        font-size: 15px;
+        font-weight: 700;
+        color: #000;
+    }
+
+    .fab-group {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 200;
+    }
+
+    .fab {
+        position: static;
+        transform: none;
+        background: #007aff;
+        color: #fff;
+        border: none;
+        border-radius: 50px;
+        padding: 14px 28px;
+        font-size: 16px;
+        font-weight: 600;
+        box-shadow: 0 4px 20px rgba(0,122,255,0.45);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .fab-icon {
+        font-size: 20px;
+    }
+
+    .fab-badge {
+        background: #ff3b30;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        min-width: 22px;
+        height: 22px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 5px;
+        border: 2px solid #007aff;
+    }
+
+    .fab-cat {
+        width: 50px;
+        height: 50px;
+        background: #fff;
+        border: none;
+        border-radius: 50%;
+        font-size: 22px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-tap-highlight-color: transparent;
+        flex-shrink: 0;
+    }
+
+        .fab-cat:active {
+            transform: scale(0.92);
+        }
+
+    /* Кнопка категорий когда корзина пуста */
+    .fab-cat-solo {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: 50px;
+        height: 50px;
+        background: #fff;
+        border: none;
+        border-radius: 50%;
+        font-size: 22px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+        .fab-cat-solo:active {
+            transform: scale(0.92);
+        }
+
+    .sheet-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 300;
+    }
+
+    .sheet {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border-radius: 20px 20px 0 0;
+        z-index: 400;
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    .sheet-handle {
+        width: 36px;
+        height: 4px;
+        background: #e0e0e5;
+        border-radius: 2px;
+        margin: 10px auto 0;
+        flex-shrink: 0;
+    }
+
+    .sheet-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px 10px;
+        border-bottom: 1px solid #f2f2f7;
+        flex-shrink: 0;
+    }
+
+    .sheet-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: #000;
+    }
+
+    .sheet-close {
+        width: 28px;
+        height: 28px;
+        background: #f2f2f7;
+        border: none;
+        border-radius: 50%;
+        font-size: 13px;
+        color: #8e8e93;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .sheet-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 0;
+    }
+
+    /* Категории */
+    .cat-row {
+        display: flex;
+        align-items: center;
+        padding: 16px 20px;
+        border-bottom: 1px solid #f2f2f7;
+        cursor: pointer;
+        gap: 12px;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+        .cat-row:active {
+            background: #f2f2f7;
+        }
+
+    .cat-row-name {
+        font-size: 16px;
+        font-weight: 500;
+        color: #000;
+        flex: 1;
+    }
+
+    .cat-row-check {
+        font-size: 18px;
+        color: #007aff;
+    }
+
+    .cart-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 20px;
+        border-bottom: 1px solid #f2f2f7;
+        gap: 12px;
+    }
+
+    .cart-info {
+        flex: 1;
+    }
+
+    .cart-name {
+        font-size: 15px;
+        font-weight: 500;
+        color: #000;
+    }
+
+    .cart-price {
+        font-size: 13px;
+        color: #007aff;
+        font-weight: 600;
+        margin-top: 2px;
+    }
+
+    .cart-controls {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .qty-btn {
+        width: 28px;
+        height: 28px;
+        background: #f2f2f7;
+        border: none;
+        border-radius: 50%;
+        font-size: 18px;
+        color: #007aff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .qty-val {
+        font-size: 15px;
+        font-weight: 600;
+        min-width: 20px;
+        text-align: center;
+    }
+
+    .del-btn {
+        background: none;
+        border: none;
+        font-size: 16px;
+        cursor: pointer;
+        padding: 4px;
+        opacity: 0.6;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .sheet-footer {
+        padding: 14px 20px 28px;
+        border-top: 1px solid #f2f2f7;
+        flex-shrink: 0;
+    }
+
+    .cart-total {
+        font-size: 16px;
+        color: #000;
+        margin-bottom: 14px;
+    }
+
+        .cart-total strong {
+            color: #007aff;
+            font-size: 18px;
+        }
+
+    .sheet-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-cancel {
+        flex: 1;
+        padding: 13px;
+        background: #f2f2f7;
+        border: none;
+        border-radius: 14px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #ff3b30;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-submit {
+        flex: 2;
+        padding: 13px;
+        background: #007aff;
+        border: none;
+        border-radius: 14px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255,255,255,0.4);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        vertical-align: middle;
+        margin-right: 2px;
+    }
+
+    /* Доставка */
+    .delivery-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 500;
+        align-items: flex-end;
+        justify-content: center;
+    }
+
+    .delivery-sheet {
+        background: #fff;
+        border-radius: 20px 20px 0 0;
+        width: 100%;
+        max-width: 480px;
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+    }
+
+    .delivery-body {
+        padding: 16px 20px;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .field-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #8e8e93;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .field-input {
+        width: 100%;
+        padding: 13px 16px;
+        border: 1.5px solid #e0e0e5;
+        border-radius: 12px;
+        font-size: 15px;
+        color: #000;
+        outline: none;
+        background: #fafafa;
+        -webkit-appearance: none;
+    }
+
+        .field-input:focus {
+            border-color: #007aff;
+            background: #fff;
+        }
+
+    .address-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .address-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 10px 7px 14px;
+        background: #f2f2f7;
+        border: 1.5px solid transparent;
+        border-radius: 50px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #000;
+        transition: all 0.15s;
+    }
+
+        .address-chip.active {
+            background: #e8f0ff;
+            border-color: #007aff;
+            color: #007aff;
+        }
+
+    .chip-text {
+        cursor: pointer;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 180px;
+    }
+
+    .chip-delete {
+        background: rgba(0,0,0,0.1);
+        border: none;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        font-size: 10px;
+        color: #666;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        padding: 0;
+    }
+
+        .chip-delete:active {
+            background: rgba(255,59,48,0.2);
+            color: #ff3b30;
+        }
+
+    .delivery-footer {
+        padding: 14px 20px 28px;
+        border-top: 1px solid #f2f2f7;
+        display: flex;
+        gap: 10px;
+    }
+
+    .tg-toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: rgba(0,0,0,0.78);
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-size: 14px;
+        font-weight: 500;
+        opacity: 0;
+        transition: opacity 0.25s, transform 0.25s;
+        pointer-events: none;
+        white-space: nowrap;
+        z-index: 600;
+    }
+
+    .tg-toast-visible {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+</style>
+
+@code {
+    [Parameter, SupplyParameterFromQuery] public int VenueId { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var chatId = await JS.InvokeAsync<long>("getTelegramUserId");
+                var items = Db.Items.Where(i => i.VenueId == VenueId).ToList();
+
+                string? firstName = null;
+                int? appUserId = null;
+
+                if (chatId != 0)
+                {
+                    var user = Db.AppUsers.FirstOrDefault(u => u.TelegramUserId == chatId);
+                    if (user != null) { firstName = user.FirstName; appUserId = user.Id; }
+                }
+                else
+                {
+                    var uri = new Uri(Nav.Uri);
+                    var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+                    var testUserId = query["testUserId"];
+                    if (!string.IsNullOrEmpty(testUserId) && int.TryParse(testUserId, out var tid))
+                    {
+                        var user = Db.AppUsers.FirstOrDefault(u => u.Id == tid);
+                        if (user != null) { firstName = user.FirstName; appUserId = user.Id; }
+                    }
+                }
+
+                // Загрузить адреса и телефон сразу
+                string? phone = null;
+                List<string> addresses = new();
+                if (appUserId != null)
+                {
+                    var appUser = Db.AppUsers.FirstOrDefault(u => u.Id == appUserId);
+                    phone = appUser?.Phone;
+                    addresses = Db.DeliveryAddresses
+                        .Where(a => a.AppUserId == appUserId)
+                        .OrderByDescending(a => a.CreatedAt)
+                        .Select(a => a.Label)
+                        .ToList();
+                }
+
+                // Загрузить категории
+                var categories = Db.Categories
+                    .Where(c => c.VenueId == VenueId)
+                    .OrderBy(c => c.SortOrder)
+                    .Select(c => new { c.Id, c.Name, c.IsDefault })
+                    .ToList();
+
+                var defaultCategoryId = categories.FirstOrDefault(c => c.IsDefault)?.Id ?? 0;
+
+                var itemsJson = JsonSerializer.Serialize(items.Select(i => new
+                {
+                    i.Id,
+                    i.Name,
+                    i.Description,
+                    Price = i.Price,
+                    i.ImageUrl,
+                    CategoryId = i.CategoryId ?? 0
+                }));
+
+                var categoriesJson = JsonSerializer.Serialize(categories);
+                var addressesJson = JsonSerializer.Serialize(addresses);
+
+                await JS.InvokeVoidAsync("initShop",
+             itemsJson, firstName ?? "", appUserId ?? 0, VenueId,
+             phone ?? "", addressesJson,
+             categoriesJson, defaultCategoryId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+    }
+}

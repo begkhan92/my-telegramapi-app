@@ -1,0 +1,6 @@
+@bnmini_crm_HostAddress = http://localhost:5048
+
+GET {{bnmini_crm_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
