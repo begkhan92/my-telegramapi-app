@@ -4,9 +4,9 @@ EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["bnmini_crm.csproj", "."]
+COPY ["bnmini_crm/bnmini_crm.csproj", "."]
 RUN dotnet restore
-COPY . .
+COPY bnmini_crm/ .
 RUN dotnet publish -c Release -o /app/publish
 
 FROM base AS final
