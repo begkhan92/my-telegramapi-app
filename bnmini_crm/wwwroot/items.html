@@ -1,0 +1,1452 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Menu</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #efeff3;
+            font-family: -apple-system, 'SF Pro Text', 'Segoe UI', sans-serif;
+        }
+
+        #tg-app {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: #efeff3;
+            padding-bottom: 120px;
+        }
+
+        .tg-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(239,239,243,0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 14px 16px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+
+        .tg-header-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .tg-header-user {
+            font-size: 13px;
+            color: #8e8e93;
+            font-weight: 500;
+        }
+
+        .tg-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 60px 0;
+            color: #8e8e93;
+            font-size: 14px;
+            gap: 12px;
+        }
+
+        .tg-spinner {
+            width: 28px;
+            height: 28px;
+            border: 3px solid #e0e0e5;
+            border-top-color: #007aff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .tg-items-list {
+            padding: 12px 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .tg-card {
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+            .tg-card:active {
+                transform: scale(0.98);
+            }
+
+        .tg-card-image-wrap {
+            width: 100%;
+            aspect-ratio: 4/5;
+            background: #f2f2f7;
+            overflow: hidden;
+        }
+
+        .tg-card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .tg-card-image-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+
+        .tg-card-body {
+            padding: 10px 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .tg-card-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .tg-card-footer {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #f2f2f7;
+        }
+
+        .tg-card-price {
+            font-size: 15px;
+            font-weight: 700;
+            color: #007aff;
+        }
+
+        .tg-btn {
+            width: 100%;
+            text-align: center;
+            background: #007aff;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .item-qty-control {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f2f2f7;
+            border-radius: 50px;
+            padding: 2px;
+        }
+
+        .item-qty-btn {
+            width: 32px;
+            height: 32px;
+            background: #fff;
+            border: none;
+            border-radius: 50%;
+            font-size: 20px;
+            color: #007aff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .item-qty-val {
+            flex: 1;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .fab-group {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 200;
+        }
+
+        .fab {
+            background: #007aff;
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 4px 20px rgba(0,122,255,0.45);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .fab-icon {
+            font-size: 20px;
+        }
+
+        .fab-badge {
+            background: #ff3b30;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            min-width: 22px;
+            height: 22px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            border: 2px solid #007aff;
+        }
+
+        .fab-cat {
+            width: 50px;
+            height: 50px;
+            background: #fff;
+            border: none;
+            border-radius: 50%;
+            font-size: 22px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+            flex-shrink: 0;
+        }
+
+            .fab-cat:active {
+                transform: scale(0.92);
+            }
+
+        .fab-cat-solo {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 50px;
+            height: 50px;
+            background: #fff;
+            border: none;
+            border-radius: 50%;
+            font-size: 22px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+            .fab-cat-solo:active {
+                transform: scale(0.92);
+            }
+
+        .sheet-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 300;
+            display: none;
+        }
+
+        .sheet {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-radius: 20px 20px 0 0;
+            z-index: 400;
+            max-height: 85vh;
+            display: none;
+            flex-direction: column;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+            .sheet.open {
+                display: flex;
+            }
+
+        .sheet-handle {
+            width: 36px;
+            height: 4px;
+            background: #e0e0e5;
+            border-radius: 2px;
+            margin: 10px auto 0;
+            flex-shrink: 0;
+        }
+
+        .sheet-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px 10px;
+            border-bottom: 1px solid #f2f2f7;
+            flex-shrink: 0;
+        }
+
+        .sheet-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .sheet-close {
+            width: 28px;
+            height: 28px;
+            background: #f2f2f7;
+            border: none;
+            border-radius: 50%;
+            font-size: 13px;
+            color: #8e8e93;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .sheet-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .cat-row {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f2f2f7;
+            cursor: pointer;
+            gap: 12px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+            .cat-row:active {
+                background: #f2f2f7;
+            }
+
+        .cat-row-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: #000;
+            flex: 1;
+        }
+
+        .cat-row-check {
+            font-size: 18px;
+            color: #007aff;
+        }
+
+        .cart-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid #f2f2f7;
+            gap: 12px;
+        }
+
+        .cart-info {
+            flex: 1;
+        }
+
+        .cart-name {
+            font-size: 15px;
+            font-weight: 500;
+            color: #000;
+        }
+
+        .cart-price {
+            font-size: 13px;
+            color: #007aff;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .cart-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .qty-btn {
+            width: 28px;
+            height: 28px;
+            background: #f2f2f7;
+            border: none;
+            border-radius: 50%;
+            font-size: 18px;
+            color: #007aff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .qty-val {
+            font-size: 15px;
+            font-weight: 600;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .del-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px;
+            opacity: 0.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .sheet-footer {
+            padding: 14px 20px 28px;
+            border-top: 1px solid #f2f2f7;
+            flex-shrink: 0;
+        }
+
+        .cart-total {
+            font-size: 16px;
+            color: #000;
+            margin-bottom: 14px;
+        }
+
+            .cart-total strong {
+                color: #007aff;
+                font-size: 18px;
+            }
+
+        .sheet-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-cancel {
+            flex: 1;
+            padding: 13px;
+            background: #f2f2f7;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #ff3b30;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-submit {
+            flex: 2;
+            padding: 13px;
+            background: #007aff;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .delivery-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 500;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+            .delivery-modal.open {
+                display: flex;
+            }
+
+        .delivery-sheet {
+            background: #fff;
+            border-radius: 20px 20px 0 0;
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+        }
+
+        .delivery-body {
+            padding: 16px 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .field-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #8e8e93;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .field-input {
+            width: 100%;
+            padding: 13px 16px;
+            border: 1.5px solid #e0e0e5;
+            border-radius: 12px;
+            font-size: 15px;
+            color: #000;
+            outline: none;
+            background: #fafafa;
+            -webkit-appearance: none;
+        }
+
+            .field-input:focus {
+                border-color: #007aff;
+                background: #fff;
+            }
+
+        .address-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .address-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 10px 7px 14px;
+            background: #f2f2f7;
+            border: 1.5px solid transparent;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #000;
+        }
+
+            .address-chip.active {
+                background: #e8f0ff;
+                border-color: #007aff;
+                color: #007aff;
+            }
+
+        .chip-text {
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 180px;
+        }
+
+        .chip-delete {
+            background: rgba(0,0,0,0.1);
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            padding: 0;
+        }
+
+        .delivery-footer {
+            padding: 14px 20px 28px;
+            border-top: 1px solid #f2f2f7;
+            display: flex;
+            gap: 10px;
+        }
+
+        .tg-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(0,0,0,0.78);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.25s, transform 0.25s;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 700;
+        }
+
+        .tg-toast-visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .time-presets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .time-radio {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: #f2f2f7;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: #000;
+        }
+
+            .time-radio input[type="radio"] {
+                display: none;
+            }
+
+            .time-radio:has(input:checked) {
+                background: #e8f0ff;
+                color: #007aff;
+                outline: 1.5px solid #007aff;
+            }
+
+        .time-input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .time-adj-btn {
+            width: 44px;
+            height: 44px;
+            background: #f2f2f7;
+            border: none;
+            border-radius: 50%;
+            font-size: 22px;
+            color: #007aff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+            .time-adj-btn:active {
+                background: #e0e0e5;
+            }
+
+        .time-input {
+            flex: 1;
+            text-align: center;
+            font-size: 20px;
+            font-weight: 600;
+            padding: 12px;
+        }
+
+        .item-detail-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 500;
+            display: none;
+        }
+
+        .item-detail-modal {
+            position: fixed;
+            inset: 0;
+            background: #fff;
+            z-index: 600;
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+            .item-detail-modal.open {
+                display: flex;
+            }
+
+        .item-detail-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .item-detail-images {
+            width: 100%;
+            overflow-x: auto;
+            display: flex;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+
+            .item-detail-images img {
+                width: 100vw;
+                max-width: 480px;
+                height: 360px;
+                object-fit: contain;
+                background: #f2f2f7;
+                flex-shrink: 0;
+                scroll-snap-align: start;
+            }
+
+            .item-detail-images .no-img {
+                width: 100vw;
+                max-width: 480px;
+                height: 360px;
+                background: #f2f2f7;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 64px;
+                flex-shrink: 0;
+            }
+
+        .item-detail-body {
+            padding: 20px 16px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .item-detail-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: #000;
+        }
+
+        .item-detail-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: #007aff;
+        }
+
+        .item-detail-desc {
+            font-size: 15px;
+            color: #3a3a3c;
+            line-height: 1.5;
+        }
+
+        .item-detail-actions {
+            margin-top: 8px;
+        }
+
+            .item-detail-actions .tg-btn {
+                width: 100%;
+                padding: 15px;
+                font-size: 16px;
+            }
+
+            .item-detail-actions .item-qty-control {
+                width: 100%;
+            }
+
+        .img-dots {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 0;
+        }
+
+        .img-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #e0e0e5;
+        }
+
+            .img-dot.active {
+                background: #007aff;
+            }
+    </style>
+</head>
+<body>
+    <div id="tg-app">
+        <div class="tg-header">
+            <span class="tg-header-title" id="header-total"></span>
+            <span class="tg-header-user" id="user-name"></span>
+        </div>
+        <div class="tg-loading" id="loading">
+            <div class="tg-spinner"></div>
+            <p>Loading...</p>
+        </div>
+        <div class="tg-items-list" id="items-list" style="display:none"></div>
+        <div class="fab-group" id="fab-group" style="display:none">
+            <button class="fab-cat" onclick="openCategories()">📂</button>
+            <button class="fab" id="fab" onclick="openCart()">
+                <span class="fab-icon">🛒</span>
+                <span class="fab-label" id="fab-label">Cart</span>
+                <span class="fab-badge" id="fab-badge">0</span>
+            </button>
+        </div>
+        <button class="fab-cat-solo" id="fab-cat-solo" onclick="openCategories()">📂</button>
+
+        <!-- Cart -->
+        <div class="sheet-overlay" id="overlay" onclick="closeCart()"></div>
+        <div class="sheet" id="sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-header">
+                <span class="sheet-title" id="t-cart-title">🛒 Cart</span>
+                <button class="sheet-close" onclick="closeCart()">✕</button>
+            </div>
+            <div class="sheet-body" id="cart-body"></div>
+            <div class="sheet-footer">
+                <div class="cart-total" id="t-total-label">Total: <strong id="cart-total">0</strong></div>
+                <div class="sheet-actions" id="sheet-actions">
+                    <button class="btn-cancel" onclick="clearCart()" id="t-clear">Clear</button>
+                    <button class="btn-submit" onclick="submitOrder()" id="t-order">Place Order</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="sheet-overlay" id="cat-overlay" onclick="closeCategories()"></div>
+        <div class="sheet" id="cat-sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-header">
+                <span class="sheet-title" id="t-cat-title">📂 Categories</span>
+                <button class="sheet-close" onclick="closeCategories()">✕</button>
+            </div>
+            <div class="sheet-body" id="cat-body"></div>
+        </div>
+
+        <!-- Delivery modal -->
+        <div class="delivery-modal" id="delivery-modal">
+            <div class="delivery-sheet">
+                <div class="sheet-handle"></div>
+                <div class="sheet-header">
+                    <span class="sheet-title" id="t-delivery-title">📦 Order Details</span>
+                    <button class="sheet-close" onclick="closeDeliveryModal()">✕</button>
+                </div>
+                <div class="delivery-body">
+                    <label class="field-label" id="t-phone-label">Phone</label>
+                    <input class="field-input" id="delivery-phone" type="tel" placeholder="+1 234 567 8900" />
+                    <label class="field-label" style="margin-top:16px" id="t-address-label">Delivery Address</label>
+                    <div class="address-chips" id="address-list"></div>
+                    <input class="field-input" id="delivery-address" type="text" placeholder="Enter address..." />
+                    <label class="field-label" style="margin-top:16px" id="t-time-label">Delivery Time</label>
+                    <div class="time-presets">
+                        <label class="time-radio"><input type="radio" name="time-preset" id="time-now" value="now" onchange="setPresetTime('now')" checked /><span id="t-now">Now</span></label>
+                        <label class="time-radio"><input type="radio" name="time-preset" id="time-lunch" value="13:00" onchange="setPresetTime('13:00')" /><span>Lunch 13:00</span></label>
+                        <label class="time-radio"><input type="radio" name="time-preset" id="time-dinner" value="18:30" onchange="setPresetTime('18:30')" /><span>Dinner 18:30</span></label>
+                        <label class="time-radio"><input type="radio" name="time-preset" id="time-custom" value="custom" /><span id="t-custom">Custom</span></label>
+                    </div>
+                    <div class="time-input-row">
+                        <button class="time-adj-btn" onclick="changeHour(-1)">−</button>
+                        <input class="field-input time-input" id="delivery-time" type="time" />
+                        <button class="time-adj-btn" onclick="changeHour(1)">+</button>
+                    </div>
+                </div>
+                <div class="delivery-footer">
+                    <button class="btn-cancel" onclick="closeDeliveryModal()" id="t-cancel">Cancel</button>
+                    <button id="confirm-order-btn" class="btn-submit" onclick="confirmOrder()" id="t-confirm">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Item detail modal -->
+        <div class="item-detail-overlay" id="item-detail-overlay" onclick="closeItemDetail()"></div>
+        <div class="item-detail-modal" id="item-detail-modal">
+            <button class="item-detail-close" onclick="closeItemDetail()">✕</button>
+            <div class="item-detail-images" id="item-detail-images"></div>
+            <div class="img-dots" id="img-dots"></div>
+            <div class="item-detail-body">
+                <div class="item-detail-name" id="item-detail-name"></div>
+                <div class="item-detail-price" id="item-detail-price"></div>
+                <div class="item-detail-desc" id="item-detail-desc"></div>
+                <div class="item-detail-actions">
+                    <div id="item-detail-btn-area"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tg-toast" id="toast"></div>
+    </div>
+
+    <script>
+// ── Config (loaded from API) ──────────────────────────────
+let cart = {}, items = [], allItems = [], appUserId = 0, venueId = 0;
+let baseUrl = window.location.origin;
+let deliveryPhone = '', savedAddresses = [], categories = [];
+let currentCategoryId = 0, currentRequestId = '';
+let currency = 'USD', deliveryFee = 0;
+
+// ── i18n ──────────────────────────────────────────────────
+const i18n = {
+    en: {
+        loading: 'Loading...', cart: '🛒 Cart', categories: '📂 Categories',
+        orderDetails: '📦 Order Details', phone: 'Phone', address: 'Delivery Address',
+        time: 'Delivery Time', now: 'Now', custom: 'Custom', cancel: 'Cancel',
+        confirm: 'Confirm Order', clear: 'Clear Cart', order: 'Place Order',
+        total: 'Total', addToCart: '+ Add to Cart', noPhone: '⚠️ Please enter phone',
+        noAddress: '⚠️ Please enter address', sent: '✅ Order placed!',
+        error: '❌ Error, please try again', noConnection: '❌ No connection',
+        allMenu: 'All Menu',
+        phonePlaceholder: '+1 234 567 8900',
+        addressPlaceholder: 'Enter address...',
+        delivery: 'Delivery'
+    },
+    ru: {
+        loading: 'Загрузка...', cart: '🛒 Корзина', categories: '📂 Категории',
+        orderDetails: '📦 Детали заказа', phone: 'Телефон', address: 'Адрес доставки',
+        time: 'Время доставки', now: 'Сейчас', custom: 'Другое', cancel: 'Отмена',
+        confirm: 'Подтвердить', clear: 'Очистить', order: 'Сделать заказ',
+        total: 'Итого', addToCart: '+ В корзину', noPhone: '⚠️ Введите телефон',
+        noAddress: '⚠️ Введите адрес', sent: '✅ Заказ отправлен!',
+        error: '❌ Ошибка, попробуйте снова', noConnection: '❌ Нет соединения',
+        allMenu: 'Всё меню',
+        phonePlaceholder: '+7 999 123 4567',
+        addressPlaceholder: 'Введите адрес...',
+        delivery: 'Доставка'
+    },
+    tk: {
+        loading: 'Ýüklenýär...', cart: '🛒 Sebet', categories: '📂 Kategoriýalar',
+        orderDetails: '📦 Sargyt maglumatlary', phone: 'Telefon', address: 'Eltip beriş salgysy',
+        time: 'Eltip beriş wagty', now: 'Şu wagt', custom: 'Başga wagt', cancel: 'Goýbolsun',
+        confirm: 'Tassyklamak', clear: 'Sargydy poz', order: 'Sargyt ugratmak',
+        total: 'Umumy', addToCart: '+ Sebede goş', noPhone: '⚠️ Telefon belgiňizi giriziň',
+        noAddress: '⚠️ Adres giriziň', sent: '✅ Sargydyňyz ugradyldy!',
+        error: '❌ Ýalňyşlyk ýüze çykdy', noConnection: '❌ Aragatnaşyk ýok',
+        allMenu: 'Ähli tagamlar',
+        phonePlaceholder: '+993 99 123456',
+        addressPlaceholder: 'Adresi giriziň...',
+        delivery: 'Eltip beriş'
+    }
+};
+
+let lang = 'en';
+let t = i18n[lang];
+
+function setLang(l) {
+    lang = i18n[l] ? l : 'en';
+    t = i18n[lang];
+    
+    applyTranslations();
+}
+
+        function applyTranslations() {
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+            const setPlaceholder = (id, val) => { const el = document.getElementById(id); if (el) el.placeholder = val; };
+
+            set('t-cart-title', t.cart);
+            set('t-cat-title', t.categories);
+            set('t-delivery-title', t.orderDetails);
+            set('t-phone-label', t.phone);
+            set('t-address-label', t.address);
+            set('t-time-label', t.time);
+            set('t-now', t.now);
+            set('t-custom', t.custom);
+            set('t-cancel', t.cancel);
+            set('t-confirm', t.confirm);
+            set('t-clear', t.clear);
+            set('t-order', t.order);
+            set('fab-label', t.cart.replace('🛒 ', ''));
+
+            setPlaceholder('delivery-phone', t.phonePlaceholder || '+1 234 567 8900');
+            setPlaceholder('delivery-address', t.addressPlaceholder || 'Enter address...');
+        }
+
+// ── Init ──────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+    const params = new URLSearchParams(window.location.search);
+    venueId = parseInt(params.get('venueId') || '0');
+    appUserId = parseInt(params.get('userId') || '0');
+    lang = params.get('lang') || 'en';
+    setLang(lang);
+
+    // Try get userId from Telegram
+    if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
+        const tgUserId = window.Telegram.WebApp.initDataUnsafe.user.id;
+        try {
+            const r = await fetch(`${baseUrl}/api/shop/user-by-telegram?telegramId=${tgUserId}`);
+            if (r.ok) {
+                const u = await r.json();
+                appUserId = u.id;
+            }
+        } catch {}
+    }
+
+    try {
+        const resp = await fetch(`${baseUrl}/api/shop/init?venueId=${venueId}&userId=${appUserId}`);
+        if (!resp.ok) throw new Error('init failed');
+        const data = await resp.json();
+
+        setLang(data.language || lang);
+
+        allItems = data.items;
+        items = [...allItems];
+        categories = data.categories;
+        deliveryPhone = data.phone || '';
+        savedAddresses = data.addresses || [];
+        currentCategoryId = data.defaultCategoryId || 0;
+        currency = data.currency || 'TMT';
+        deliveryFee = data.deliveryFee || 0;
+
+        if (!data.isOpen) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('items-list').style.display = 'none';
+            document.getElementById('fab-group').style.display = 'none';
+            document.getElementById('fab-cat-solo').style.display = 'none';
+            document.getElementById('tg-app').innerHTML += `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:16px">
+            <div style="font-size:64px">🔴</div>
+            <div style="font-size:22px;font-weight:700">${t.closed || 'Closed'}</div>
+            <div style="font-size:15px;color:#8e8e93">${t.closedSub || 'We are not accepting orders right now'}</div>
+        </div>`;
+            return;
+        }
+
+        if (data.firstName) {
+            document.getElementById('user-name').textContent = '👤 ' + data.firstName;
+        }
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('items-list').style.display = 'grid';
+        renderItems();
+        updateFab();
+    } catch(e) {
+        document.getElementById('loading').innerHTML = '<p style="color:#ff3b30">Failed to load menu</p>';
+    }
+});
+
+// ── Render items ──────────────────────────────────────────
+function renderItems() {
+    const list = document.getElementById('items-list');
+    list.innerHTML = '';
+    const defaultCat = categories.find(c => c.isDefault);
+    const isDefault = currentCategoryId === 0 || (defaultCat && currentCategoryId === defaultCat.id);
+    const filtered = isDefault ? allItems : allItems.filter(i => i.categoryId === currentCategoryId);
+    items = filtered;
+
+    filtered.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'tg-card';
+        card.id = 'card-' + item.id;
+        const firstImage = item.images?.length > 0 ? item.images[0].url : item.imageUrl;
+        card.innerHTML = `
+            <div class="tg-card-image-wrap" onclick="openItemDetail(${item.id})">
+                ${firstImage
+                    ? `<img class="tg-card-image" src="${firstImage}" alt="${item.name}" />`
+                    : `<div class="tg-card-image-placeholder">📦</div>`}
+            </div>
+            <div class="tg-card-body">
+                <div class="tg-card-name" onclick="openItemDetail(${item.id})">${item.name}</div>
+                <div class="tg-card-footer">
+                    <span class="tg-card-price">${item.price.toFixed(2)} ${currency}</span>
+                    <div id="btn-area-${item.id}">
+                        ${cart[item.id]
+                            ? `<div class="item-qty-control">
+                                <button class="item-qty-btn" onclick="decrease(${item.id})">−</button>
+                                <span class="item-qty-val">${cart[item.id]}</span>
+                                <button class="item-qty-btn" onclick="increase(${item.id})">+</button>
+                               </div>`
+                            : `<button class="tg-btn" onclick="addToCart(${item.id})">${t.addToCart}</button>`}
+                    </div>
+                </div>
+            </div>`;
+        list.appendChild(card);
+    });
+}
+
+// ── Categories ────────────────────────────────────────────
+function openCategories() {
+    const body = document.getElementById('cat-body');
+    body.innerHTML = '';
+    const allRow = document.createElement('div');
+    allRow.className = 'cat-row';
+    allRow.onclick = () => selectCategory(0);
+    allRow.innerHTML = `<span class="cat-row-name">${t.allMenu}</span>${currentCategoryId === 0 ? '<span class="cat-row-check">✓</span>' : ''}`;
+    body.appendChild(allRow);
+    categories.forEach(cat => {
+        const row = document.createElement('div');
+        row.className = 'cat-row';
+        row.onclick = () => selectCategory(cat.id);
+        row.innerHTML = `<span class="cat-row-name">${cat.name}</span>${currentCategoryId === cat.id ? '<span class="cat-row-check">✓</span>' : ''}`;
+        body.appendChild(row);
+    });
+    openSheet('cat');
+}
+
+function closeCategories() { closeSheet('cat'); }
+function selectCategory(id) { currentCategoryId = id; closeCategories(); renderItems(); }
+
+// ── Cart ──────────────────────────────────────────────────
+function addToCart(id) { cart[id] = 1; updateBtnArea(id); updateFab(); }
+function increase(id) { cart[id]++; updateBtnArea(id); updateFab(); }
+function decrease(id) {
+    if (cart[id] > 1) cart[id]--;
+    else delete cart[id];
+    updateBtnArea(id); updateFab();
+}
+
+function updateBtnArea(id) {
+    const area = document.getElementById('btn-area-' + id);
+    if (!area) return;
+    area.innerHTML = cart[id]
+        ? `<div class="item-qty-control">
+            <button class="item-qty-btn" onclick="decrease(${id})">−</button>
+            <span class="item-qty-val">${cart[id]}</span>
+            <button class="item-qty-btn" onclick="increase(${id})">+</button>
+           </div>`
+        : `<button class="tg-btn" onclick="addToCart(${id})">${t.addToCart}</button>`;
+}
+
+function updateFab() {
+    const fabGroup = document.getElementById('fab-group');
+    const fabSolo = document.getElementById('fab-cat-solo');
+    const count = Object.values(cart).reduce((a, b) => a + b, 0);
+    const total = Object.entries(cart).reduce((sum, [id, qty]) => {
+        const item = allItems.find(i => i.id == id);
+        return sum + (item ? item.price * qty : 0);
+    }, 0);
+    if (count > 0) {
+        fabGroup.style.display = 'flex';
+        fabSolo.style.display = 'none';
+        document.getElementById('fab-badge').textContent = count;
+        document.getElementById('header-total').textContent = total.toFixed(2) + ' ' + currency;
+    } else {
+        fabGroup.style.display = 'none';
+        fabSolo.style.display = 'flex';
+        document.getElementById('header-total').textContent = '';
+    }
+}
+
+function openCart() {
+    renderCartBody();
+    openSheet('sheet');
+}
+
+function closeCart() { closeSheet('sheet'); }
+
+function renderCartBody() {
+    const body = document.getElementById('cart-body');
+    body.innerHTML = '';
+    let total = 0;
+    Object.entries(cart).forEach(([id, qty]) => {
+        const item = allItems.find(i => i.id == id);
+        if (!item) return;
+        const subtotal = item.price * qty;
+        total += subtotal;
+        body.innerHTML += `
+            <div class="cart-row">
+                <div class="cart-info">
+                    <div class="cart-name">${item.name}</div>
+                    <div class="cart-price">${subtotal.toFixed(2)} ${currency}</div>
+                </div>
+                <div class="cart-controls">
+                    <button class="qty-btn" onclick="cartDecrease(${id})">−</button>
+                    <span class="qty-val">${qty}</span>
+                    <button class="qty-btn" onclick="cartIncrease(${id})">+</button>
+                    <button class="del-btn" onclick="removeFromCart(${id})">🗑</button>
+                </div>
+            </div>`;
+    });
+    const fee = deliveryFee > 0 ? `<div style="font-size:13px;color:#8e8e93;margin-bottom:4px">+ ${t.delivery || 'Delivery'}: ${deliveryFee.toFixed(2)} ${currency}</div>` : '';
+    document.getElementById('cart-total').innerHTML = fee + `<strong>${(total + deliveryFee).toFixed(2)} ${currency}</strong>`;
+}
+
+function cartIncrease(id) { cart[id]++; updateBtnArea(id); updateFab(); renderCartBody(); }
+function cartDecrease(id) {
+    if (cart[id] > 1) cart[id]--;
+    else delete cart[id];
+    updateBtnArea(id); updateFab(); renderCartBody();
+    if (Object.keys(cart).length === 0) closeCart();
+}
+function removeFromCart(id) {
+    delete cart[id];
+    updateBtnArea(id); updateFab(); renderCartBody();
+    if (Object.keys(cart).length === 0) closeCart();
+}
+function clearCart() {
+    Object.keys(cart).forEach(id => { delete cart[id]; updateBtnArea(id); });
+    cart = {}; updateFab(); closeCart();
+}
+
+// ── Delivery ──────────────────────────────────────────────
+function submitOrder() {
+    if (appUserId === 0) { showToast('⚠️ Please open via Telegram bot'); return; }
+    openDeliveryModal();
+}
+
+function openDeliveryModal() {
+    currentRequestId = crypto.randomUUID();
+    document.getElementById('delivery-phone').value = deliveryPhone;
+    const addressList = document.getElementById('address-list');
+    addressList.innerHTML = '';
+    savedAddresses.forEach((addr, index) => {
+        const chip = document.createElement('div');
+        chip.className = 'address-chip';
+        chip.dataset.addr = addr;
+        chip.innerHTML = `
+            <span class="chip-text" onclick="selectAddress('${addr.replace(/'/g, "\\'")}')">${addr.length > 50 ? addr.substring(0, 50) + '...' : addr}</span>
+            <button class="chip-delete" onclick="deleteAddress(${index}, '${addr.replace(/'/g, "\\'")}', this)">✕</button>`;
+        addressList.appendChild(chip);
+    });
+    const now = new Date();
+    document.getElementById('delivery-time').value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    document.getElementById('time-now').checked = true;
+    const btn = document.getElementById('confirm-order-btn');
+    btn.disabled = false;
+    btn.textContent = t.confirm;
+    document.getElementById('sheet-actions').style.display = 'none';
+    document.getElementById('delivery-modal').classList.add('open');
+}
+
+function closeDeliveryModal() {
+    document.getElementById('delivery-modal').classList.remove('open');
+    document.getElementById('sheet-actions').style.display = 'flex';
+}
+
+function changeHour(delta) {
+    const input = document.getElementById('delivery-time');
+    const [hh, mm] = input.value.split(':').map(Number);
+    const newHour = (hh + delta + 24) % 24;
+    input.value = `${String(newHour).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+    document.getElementById('time-custom').checked = true;
+}
+
+function setPresetTime(value) {
+    const input = document.getElementById('delivery-time');
+    if (value === 'now') {
+        const now = new Date();
+        input.value = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    } else {
+        input.value = value;
+    }
+}
+
+function selectAddress(addr) {
+    document.getElementById('delivery-address').value = addr;
+    document.querySelectorAll('.address-chip').forEach(c => c.classList.remove('active'));
+    event.target.closest('.address-chip').classList.add('active');
+}
+
+async function deleteAddress(index, addr, btn) {
+    const chip = btn.closest('.address-chip');
+    chip.style.opacity = '0.4';
+    chip.style.pointerEvents = 'none';
+    try {
+        const resp = await fetch(`${baseUrl}/api/orders/delete-address`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ appUserId, address: addr })
+        });
+        if (resp.ok) {
+            chip.remove();
+            savedAddresses.splice(index, 1);
+            if (document.getElementById('delivery-address').value === addr)
+                document.getElementById('delivery-address').value = '';
+        } else {
+            chip.style.opacity = '1'; chip.style.pointerEvents = 'auto';
+        }
+    } catch {
+        chip.style.opacity = '1'; chip.style.pointerEvents = 'auto';
+    }
+}
+
+async function confirmOrder() {
+    const btn = document.getElementById('confirm-order-btn');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.textContent = '⏳';
+
+    const phone = document.getElementById('delivery-phone').value.trim();
+    const address = document.getElementById('delivery-address').value.trim();
+    const deliveryTime = document.getElementById('delivery-time').value;
+
+    if (!phone) { btn.disabled = false; btn.textContent = t.confirm; showToast(t.noPhone); return; }
+    if (!address) { btn.disabled = false; btn.textContent = t.confirm; showToast(t.noAddress); return; }
+
+    const orderItems = Object.entries(cart).map(([id, qty]) => ({ itemId: parseInt(id), quantity: qty }));
+
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        const resp = await fetch(`${baseUrl}/api/orders`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ venueId, appUserId, phone, address, deliveryTime, requestId: currentRequestId, orderItems }),
+            signal: controller.signal
+        });
+        clearTimeout(timeout);
+        if (resp.ok) {
+            if (!savedAddresses.includes(address)) savedAddresses.push(address);
+            deliveryPhone = phone;
+            closeDeliveryModal();
+            closeCart();
+            clearCart();
+            showToast(t.sent);
+        } else {
+            showToast(t.error);
+        }
+    } catch {
+        showToast(t.noConnection);
+    } finally {
+        btn.disabled = false;
+        btn.textContent = t.confirm;
+    }
+}
+
+// ── Item Detail ───────────────────────────────────────────
+function openItemDetail(id) {
+    const item = allItems.find(i => i.id === id);
+    if (!item) return;
+
+    const images = item.images?.length > 0
+        ? item.images.map(img => img.url)
+        : item.imageUrl ? [item.imageUrl] : [];
+
+    const imagesEl = document.getElementById('item-detail-images');
+    const dotsEl = document.getElementById('img-dots');
+
+    if (images.length > 0) {
+        imagesEl.innerHTML = images.map(url => `<img src="${url}" alt="${item.name}" />`).join('');
+        dotsEl.innerHTML = images.length > 1
+            ? images.map((_, i) => `<div class="img-dot ${i === 0 ? 'active' : ''}"></div>`).join('')
+            : '';
+
+        if (images.length > 1) {
+            imagesEl.addEventListener('scroll', () => {
+                const idx = Math.round(imagesEl.scrollLeft / imagesEl.offsetWidth);
+                dotsEl.querySelectorAll('.img-dot').forEach((d, i) => {
+                    d.classList.toggle('active', i === idx);
+                });
+            }, { passive: true });
+        }
+    } else {
+        imagesEl.innerHTML = `<div class="no-img">📦</div>`;
+        dotsEl.innerHTML = '';
+    }
+
+    document.getElementById('item-detail-name').textContent = item.name;
+    document.getElementById('item-detail-price').textContent = item.price.toFixed(2) + ' ' + currency;
+    document.getElementById('item-detail-desc').textContent = item.description || '';
+
+    updateDetailBtnArea(id);
+
+    document.getElementById('item-detail-overlay').style.display = 'block';
+    document.getElementById('item-detail-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function updateDetailBtnArea(id) {
+    const btnArea = document.getElementById('item-detail-btn-area');
+    if (cart[id]) {
+        btnArea.innerHTML = `
+            <div class="item-qty-control">
+                <button class="item-qty-btn" onclick="decreaseDetail(${id})">−</button>
+                <span class="item-qty-val">${cart[id]}</span>
+                <button class="item-qty-btn" onclick="increaseDetail(${id})">+</button>
+            </div>`;
+    } else {
+        btnArea.innerHTML = `<button class="tg-btn" onclick="addToCartDetail(${id})">${t.addToCart}</button>`;
+    }
+}
+
+function closeItemDetail() {
+    document.getElementById('item-detail-overlay').style.display = 'none';
+    document.getElementById('item-detail-modal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function addToCartDetail(id) { addToCart(id); updateDetailBtnArea(id); }
+function increaseDetail(id) { increase(id); updateDetailBtnArea(id); }
+function decreaseDetail(id) {
+    if (cart[id] > 1) { decrease(id); updateDetailBtnArea(id); }
+    else { decrease(id); closeItemDetail(); }
+}
+
+// ── Utils ─────────────────────────────────────────────────
+function openSheet(name) {
+    const overlay = document.getElementById(name === 'sheet' ? 'overlay' : name + '-overlay');
+    const sheet = document.getElementById(name === 'sheet' ? 'sheet' : name + '-sheet');
+    if (overlay) overlay.style.display = 'block';
+    if (sheet) sheet.classList.add('open');
+}
+
+function closeSheet(name) {
+    const overlay = document.getElementById(name === 'sheet' ? 'overlay' : name + '-overlay');
+    const sheet = document.getElementById(name === 'sheet' ? 'sheet' : name + '-sheet');
+    if (overlay) overlay.style.display = 'none';
+    if (sheet) sheet.classList.remove('open');
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('tg-toast-visible');
+    setTimeout(() => t.classList.remove('tg-toast-visible'), 2500);
+}
+    </script>
+</body>
+</html>

@@ -26,7 +26,7 @@
         <button class="fab-cat" onclick="openCategories()">📂</button>
         <button class="fab" id="fab" onclick="openCart()">
             <span class="fab-icon">🛒</span>
-            <span class="fab-label">Корзина</span>
+            <span class="fab-label">Sebet</span>
             <span class="fab-badge" id="fab-badge">0</span>
         </button>
     </div>
@@ -39,15 +39,15 @@
     <div class="sheet" id="sheet" style="display:none">
         <div class="sheet-handle"></div>
         <div class="sheet-header">
-            <span class="sheet-title">🛒 Корзина</span>
+            <span class="sheet-title">🛒 Sebet</span>
             <button class="sheet-close" onclick="closeCart()">✕</button>
         </div>
         <div class="sheet-body" id="cart-body"></div>
         <div class="sheet-footer">
-            <div class="cart-total">Итого: <strong id="cart-total">0 ₽</strong></div>
+            <div class="cart-total">Umumy: <strong id="cart-total">0 ₽</strong></div>
             <div class="sheet-actions" id="sheet-actions">
-                <button class="btn-cancel" onclick="clearCart()">Очистить</button>
-                <button class="btn-submit" onclick="submitOrder()">Отправить заказ</button>
+                <button class="btn-cancel" onclick="clearCart()">Sargydy poz</button>
+                <button class="btn-submit" onclick="submitOrder()">Sargyt ugratmak</button>
             </div>
         </div>
     </div>
@@ -57,7 +57,7 @@
     <div class="sheet" id="cat-sheet" style="display:none">
         <div class="sheet-handle"></div>
         <div class="sheet-header">
-            <span class="sheet-title">📂 Категории</span>
+            <span class="sheet-title">📂 Tagamlaryň görnüşler</span>
             <button class="sheet-close" onclick="closeCategories()">✕</button>
         </div>
         <div class="sheet-body" id="cat-body"></div>
@@ -68,19 +68,64 @@
         <div class="delivery-sheet">
             <div class="sheet-handle"></div>
             <div class="sheet-header">
-                <span class="sheet-title">📦 Оформление</span>
+                <span class="sheet-title">📦 Sargyt maglumatlary</span>
                 <button class="sheet-close" onclick="closeDeliveryModal()">✕</button>
             </div>
             <div class="delivery-body">
-                <label class="field-label">Телефон</label>
-                <input class="field-input" id="delivery-phone" type="tel" placeholder="+7 999 123 45 67" />
-                <label class="field-label" style="margin-top:16px">Адрес доставки</label>
+                <label class="field-label">Telefon</label>
+                <input class="field-input" id="delivery-phone" type="tel" placeholder="+993 99 123456" />
+
+                <label class="field-label" style="margin-top:16px">Sargydyň adresi</label>
                 <div class="address-chips" id="address-list"></div>
-                <input class="field-input" id="delivery-address" type="text" placeholder="Введите адрес..." />
+                <input class="field-input" id="delivery-address" type="text" placeholder="Adresi giriziň..." />
+
+                <label class="field-label" style="margin-top:16px">Sargydyň wagty</label>
+
+                <!-- Radio buttons -->
+                <div class="time-presets">
+                    <label class="time-radio">
+                        <input type="radio" name="time-preset" id="time-now" value="now" onchange="setPresetTime('now')" checked />
+                        <span>Şu wagt</span>
+                    </label>
+                    <label class="time-radio">
+                        <input type="radio" name="time-preset" id="time-lunch" value="13:00" onchange="setPresetTime('13:00')" />
+                        <span>Günortanlyk 13:00</span>
+                    </label>
+                    <label class="time-radio">
+                        <input type="radio" name="time-preset" id="time-dinner" value="18:30" onchange="setPresetTime('18:30')" />
+                        <span>Agşamlyk 18:30</span>
+                    </label>
+                    <label class="time-radio">
+                        <input type="radio" name="time-preset" id="time-custom" value="custom" />
+                        <span>Başga wagt</span>
+                    </label>
+                </div>
+
+                <!-- Поле времени с кнопками +/- -->
+                <div class="time-input-row">
+                    <button class="time-adj-btn" onclick="changeHour(-1)">−</button>
+                    <input class="field-input time-input" id="delivery-time" type="time" />
+                    <button class="time-adj-btn" onclick="changeHour(1)">+</button>
+                </div>
             </div>
             <div class="delivery-footer">
-                <button class="btn-cancel" onclick="closeDeliveryModal()">Отмена</button>
-                <button class="btn-submit" onclick="confirmOrder()">Подтвердить</button>
+                <button class="btn-cancel" onclick="closeDeliveryModal()">Goýbolsun</button>
+                <button id="confirm-order-btn" class="btn-submit" onclick="confirmOrder()">Tassyklamak</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модал детали товара -->
+    <div class="item-detail-overlay" id="item-detail-overlay" onclick="closeItemDetail()"></div>
+    <div class="item-detail-modal" id="item-detail-modal">
+        <div class="item-detail-close" onclick="closeItemDetail()">✕</div>
+        <div class="item-detail-images" id="item-detail-images"></div>
+        <div class="item-detail-body">
+            <div class="item-detail-name" id="item-detail-name"></div>
+            <div class="item-detail-price" id="item-detail-price"></div>
+            <div class="item-detail-desc" id="item-detail-desc"></div>
+            <div class="item-detail-actions">
+                <div id="item-detail-btn-area"></div>
             </div>
         </div>
     </div>
@@ -229,10 +274,10 @@
     }
 
     .tg-card-body {
-        padding: 10px 12px 12px;
+        padding: 10px 12px 14px;
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 6px;
         flex: 1;
     }
 
@@ -252,9 +297,11 @@
     .tg-card-footer {
         display: flex;
         flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-        margin-top: 8px;
+        align-items: stretch;
+        gap: 10px;
+        margin-top: 12px;
+        padding-top: 8px;
+        border-top: 1px solid #f2f2f7;
     }
 
     .tg-card-price {
@@ -761,85 +808,248 @@
         opacity: 1;
         transform: translateX(-50%) translateY(0);
     }
+
+    .time-presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .time-radio {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        background: #f2f2f7;
+        border-radius: 50px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        color: #000;
+        transition: all 0.15s;
+    }
+
+        .time-radio input[type="radio"] {
+            display: none;
+        }
+
+        .time-radio:has(input:checked) {
+            background: #e8f0ff;
+            color: #007aff;
+            outline: 1.5px solid #007aff;
+        }
+
+    .time-input-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 4px;
+    }
+
+    .time-adj-btn {
+        width: 44px;
+        height: 44px;
+        background: #f2f2f7;
+        border: none;
+        border-radius: 50%;
+        font-size: 22px;
+        color: #007aff;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+        .time-adj-btn:active {
+            background: #e0e0e5;
+        }
+
+    .time-input {
+        flex: 1;
+        text-align: center;
+        font-size: 20px;
+        font-weight: 600;
+        padding: 12px;
+    }
+
+    .item-detail-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 500;
+        display: none;
+    }
+
+    .item-detail-modal {
+        position: fixed;
+        inset: 0;
+        background: #fff;
+        z-index: 600;
+        display: none;
+        flex-direction: column;
+        overflow-y: auto;
+    }
+
+        .item-detail-modal.open {
+            display: flex;
+        }
+
+    .item-detail-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 32px;
+        height: 32px;
+        background: rgba(0,0,0,0.5);
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 10;
+    }
+
+    .item-detail-images {
+        width: 100%;
+        overflow-x: auto;
+        display: flex;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+    }
+
+        .item-detail-images img {
+            width: 100vw;
+            max-width: 480px;
+            height: 360px;
+            object-fit: contain;
+            background: #f2f2f7;
+            flex-shrink: 0;
+            scroll-snap-align: start;
+        }
+
+        .item-detail-images .no-img {
+            width: 100vw;
+            max-width: 480px;
+            height: 360px;
+            background: #f2f2f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            flex-shrink: 0;
+        }
+
+    .item-detail-body {
+        padding: 20px 16px 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .item-detail-name {
+        font-size: 22px;
+        font-weight: 700;
+        color: #000;
+    }
+
+    .item-detail-price {
+        font-size: 20px;
+        font-weight: 700;
+        color: #007aff;
+    }
+
+    .item-detail-desc {
+        font-size: 15px;
+        color: #3a3a3c;
+        line-height: 1.5;
+    }
+
+    .item-detail-actions {
+        margin-top: 8px;
+    }
+
+        .item-detail-actions .tg-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+        }
+
+        .item-detail-actions .item-qty-control {
+            width: 100%;
+        }
 </style>
 
 @code {
     [Parameter, SupplyParameterFromQuery] public int VenueId { get; set; }
+    [Parameter, SupplyParameterFromQuery] public int UserId { get; set; }
+
+    private string _itemsJson = "[]";
+    private string _categoriesJson = "[]";
+    private string _addressesJson = "[]";
+    private string _firstName = "";
+    private string _phone = "";
+    private int _defaultCategoryId = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var items = await Db.Items
+    .Where(i => i.VenueId == VenueId)
+    .Include(i => i.Images)
+    .ToListAsync();
+        var categories = await Db.Categories
+            .Where(c => c.VenueId == VenueId)
+            .OrderBy(c => c.SortOrder)
+            .ToListAsync();
+
+        string? phone = null;
+        List<string> addresses = new();
+
+        if (UserId > 0)
+        {
+            var user = await Db.AppUsers.FirstOrDefaultAsync(u => u.Id == UserId);
+            if (user != null)
+            {
+                _firstName = user.FirstName ?? "";
+                phone = user.Phone;
+                addresses = await Db.DeliveryAddresses
+                    .Where(a => a.AppUserId == UserId)
+                    .OrderByDescending(a => a.CreatedAt)
+                    .Select(a => a.Label)
+                    .ToListAsync();
+            }
+        }
+
+        _phone = phone ?? "";
+        _defaultCategoryId = categories.FirstOrDefault(c => c.IsDefault)?.Id ?? 0;
+
+        _itemsJson = JsonSerializer.Serialize(items.Select(i => new
+        {
+            i.Id,
+            i.Name,
+            i.Description,
+            Price = i.Price,
+            i.ImageUrl,
+            CategoryId = i.CategoryId ?? 0,
+            Images = i.Images.OrderBy(img => img.SortOrder).Select(img => new { img.Url }).ToList()
+        }));
+        _categoriesJson = JsonSerializer.Serialize(categories.Select(c => new { c.Id, c.Name, c.IsDefault }));
+        _addressesJson = JsonSerializer.Serialize(addresses);
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            try
-            {
-                var chatId = await JS.InvokeAsync<long>("getTelegramUserId");
-                var items = Db.Items.Where(i => i.VenueId == VenueId).ToList();
-
-                string? firstName = null;
-                int? appUserId = null;
-
-                if (chatId != 0)
-                {
-                    var user = Db.AppUsers.FirstOrDefault(u => u.TelegramUserId == chatId);
-                    if (user != null) { firstName = user.FirstName; appUserId = user.Id; }
-                }
-                else
-                {
-                    var uri = new Uri(Nav.Uri);
-                    var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
-                    var testUserId = query["testUserId"];
-                    if (!string.IsNullOrEmpty(testUserId) && int.TryParse(testUserId, out var tid))
-                    {
-                        var user = Db.AppUsers.FirstOrDefault(u => u.Id == tid);
-                        if (user != null) { firstName = user.FirstName; appUserId = user.Id; }
-                    }
-                }
-
-                // Загрузить адреса и телефон сразу
-                string? phone = null;
-                List<string> addresses = new();
-                if (appUserId != null)
-                {
-                    var appUser = Db.AppUsers.FirstOrDefault(u => u.Id == appUserId);
-                    phone = appUser?.Phone;
-                    addresses = Db.DeliveryAddresses
-                        .Where(a => a.AppUserId == appUserId)
-                        .OrderByDescending(a => a.CreatedAt)
-                        .Select(a => a.Label)
-                        .ToList();
-                }
-
-                // Загрузить категории
-                var categories = Db.Categories
-                    .Where(c => c.VenueId == VenueId)
-                    .OrderBy(c => c.SortOrder)
-                    .Select(c => new { c.Id, c.Name, c.IsDefault })
-                    .ToList();
-
-                var defaultCategoryId = categories.FirstOrDefault(c => c.IsDefault)?.Id ?? 0;
-
-                var itemsJson = JsonSerializer.Serialize(items.Select(i => new
-                {
-                    i.Id,
-                    i.Name,
-                    i.Description,
-                    Price = i.Price,
-                    i.ImageUrl,
-                    CategoryId = i.CategoryId ?? 0
-                }));
-
-                var categoriesJson = JsonSerializer.Serialize(categories);
-                var addressesJson = JsonSerializer.Serialize(addresses);
-
-                await JS.InvokeVoidAsync("initShop",
-             itemsJson, firstName ?? "", appUserId ?? 0, VenueId,
-             phone ?? "", addressesJson,
-             categoriesJson, defaultCategoryId);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-            }
+            await JS.InvokeVoidAsync("initShop",
+                _itemsJson, _firstName, UserId, VenueId,
+                _phone, _addressesJson,
+                _categoriesJson, _defaultCategoryId);
         }
     }
 }

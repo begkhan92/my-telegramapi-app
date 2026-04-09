@@ -1,0 +1,162 @@
+﻿@page "/shop"
+@using bnmini_crm.Data
+@using bnmini_crm.Models
+@using Microsoft.EntityFrameworkCore
+@using System.Text.Json
+@inject AppDbContext Db
+
+@{
+    int venueId = int.TryParse(Request.Query["venueId"], out var vid) ? vid : 0;
+    int userId = int.TryParse(Request.Query["userId"], out var uid) ? uid : 0;
+
+    var items = await Db.Items.Where(i => i.VenueId == venueId).ToListAsync();
+    var categories = await Db.Categories
+        .Where(c => c.VenueId == venueId)
+        .OrderBy(c => c.SortOrder)
+        .ToListAsync();
+
+    string? firstName = null;
+    string? phone = null;
+    List<string> addresses = new();
+
+    if (userId > 0)
+    {
+        var user = await Db.AppUsers.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user != null)
+        {
+            firstName = user.FirstName;
+            phone = user.Phone;
+            addresses = await Db.DeliveryAddresses
+                .Where(a => a.AppUserId == userId)
+                .OrderByDescending(a => a.CreatedAt)
+                .Select(a => a.Label)
+                .ToListAsync();
+        }
+    }
+
+    var defaultCategoryId = categories.FirstOrDefault(c => c.IsDefault)?.Id ?? 0;
+
+    var itemsJson = JsonSerializer.Serialize(items.Select(i => new
+    {
+        i.Id,
+        i.Name,
+        i.Description,
+        Price = i.Price,
+        i.ImageUrl,
+        CategoryId = i.CategoryId ?? 0
+    }));
+    var categoriesJson = JsonSerializer.Serialize(categories.Select(c => new { c.Id, c.Name, c.IsDefault }));
+    var addressesJson = JsonSerializer.Serialize(addresses);
+}
+<!DOCTYPE html>
+<html lang="tk">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Sargyt</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+
+    <div id="tg-app">
+        <div class="tg-header">
+            <span class="tg-header-title" id="header-total"></span>
+            <span class="tg-header-user" id="user-name"></span>
+        </div>
+        <div class="tg-loading" id="loading">
+            <div class="tg-spinner"></div>
+            <p>Загрузка...</p>
+        </div>
+        <div class="tg-items-list" id="items-list" style="display:none"></div>
+        <div class="fab-group" id="fab-group" style="display:none">
+            <button class="fab-cat" onclick="openCategories()">📂</button>
+            <button class="fab" id="fab" onclick="openCart()">
+                <span class="fab-icon">🛒</span>
+                <span class="fab-label">Sebet</span>
+                <span class="fab-badge" id="fab-badge">0</span>
+            </button>
+        </div>
+        <button class="fab-cat-solo" id="fab-cat-solo" onclick="openCategories()">📂</button>
+        <div class="sheet-overlay" id="overlay" style="display:none" onclick="closeCart()"></div>
+        <div class="sheet" id="sheet" style="display:none">
+            <div class="sheet-handle"></div>
+            <div class="sheet-header">
+                <span class="sheet-title">🛒 Sebet</span>
+                <button class="sheet-close" onclick="closeCart()">✕</button>
+            </div>
+            <div class="sheet-body" id="cart-body"></div>
+            <div class="sheet-footer">
+                <div class="cart-total">Umumy: <strong id="cart-total">0 м</strong></div>
+                <div class="sheet-actions" id="sheet-actions">
+                    <button class="btn-cancel" onclick="clearCart()">Sargydy poz</button>
+                    <button class="btn-submit" onclick="submitOrder()">Sargyt ugratmak</button>
+                </div>
+            </div>
+        </div>
+        <div class="sheet-overlay" id="cat-overlay" style="display:none" onclick="closeCategories()"></div>
+        <div class="sheet" id="cat-sheet" style="display:none">
+            <div class="sheet-handle"></div>
+            <div class="sheet-header">
+                <span class="sheet-title">📂 Tagamlaryň görnüşler</span>
+                <button class="sheet-close" onclick="closeCategories()">✕</button>
+            </div>
+            <div class="sheet-body" id="cat-body"></div>
+        </div>
+        <div class="delivery-modal" id="delivery-modal" style="display:none">
+            <div class="delivery-sheet">
+                <div class="sheet-handle"></div>
+                <div class="sheet-header">
+                    <span class="sheet-title">📦 Sargyt maglumatlary</span>
+                    <button class="sheet-close" onclick="closeDeliveryModal()">✕</button>
+                </div>
+                <div class="delivery-body">
+                    <label class="field-label">Telefon</label>
+                    <input class="field-input" id="delivery-phone" type="tel" placeholder="+993 99 123456" />
+                    <label class="field-label" style="margin-top:16px">Sargydyň adresi</label>
+                    <div class="address-chips" id="address-list"></div>
+                    <input class="field-input" id="delivery-address" type="text" placeholder="Adresi giriziň..." />
+                    <label class="field-label" style="margin-top:16px">Sargydyň wagty</label>
+                    <div class="time-presets">
+                        <label class="time-radio"><input type="radio" name="time-preset" id="time-now" value="now" onchange="setPresetTime('now')" checked /><span>Şu wagt</span></label>
+                        <label class="time-radio"><input type="radio" name="time-preset" id="time-lunch" value="13:00" onchange="setPresetTime('13:00')" /><span>Günortanlyk 13:00</span></label>
+                        <label class="time-radio"><input type="radio" name="time-preset" id="time-dinner" value="18:30" onchange="setPresetTime('18:30')" /><span>Agşamlyk 18:30</span></label>
+                        <label class="time-radio"><input type="radio" name="time-preset" id="time-custom" value="custom" /><span>Başga wagt</span></label>
+                    </div>
+                    <div class="time-input-row">
+                        <button class="time-adj-btn" onclick="changeHour(-1)">−</button>
+                        <input class="field-input time-input" id="delivery-time" type="time" />
+                        <button class="time-adj-btn" onclick="changeHour(1)">+</button>
+                    </div>
+                </div>
+                <div class="delivery-footer">
+                    <button class="btn-cancel" onclick="closeDeliveryModal()">Goýbolsun</button>
+                    <button id="confirm-order-btn" class="btn-submit" onclick="confirmOrder()">Tassyklamak</button>
+                </div>
+            </div>
+        </div>
+        <div class="tg-toast" id="toast"></div>
+    </div>
+
+    @* Стили — скопируй из Items.razor *@
+    <style>
+        @* ... вставь сюда весь <style> из Items.razor *@
+    </style>
+
+    <script src="/js/telegramHelper.js"></script>
+    <script src="/js/shop.js?v=6"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            initShop(
+        @Html.Raw(itemsJson),
+                '@Html.Raw(firstName ?? "")',
+        @(userId),
+        @(venueId),
+                '@Html.Raw(phone ?? "")',
+        @Html.Raw(addressesJson),
+        @Html.Raw(categoriesJson),
+        @(defaultCategoryId)
+            );
+        });
+    </script>
+</body>
+</html>

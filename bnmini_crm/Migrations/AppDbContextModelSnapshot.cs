@@ -141,6 +141,31 @@ namespace bnmini_crm.Migrations
                     b.ToTable("Items");
                 });
 
+            modelBuilder.Entity("bnmini_crm.Models.ItemImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ItemId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemId");
+
+                    b.ToTable("ItemImages");
+                });
+
             modelBuilder.Entity("bnmini_crm.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -152,16 +177,31 @@ namespace bnmini_crm.Migrations
                     b.Property<int>("AppUserId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("CancelReason")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("DeliveryAddress")
                         .HasColumnType("text");
 
+                    b.Property<string>("DeliveryTime")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("OperatorMessageId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Phone")
                         .HasColumnType("text");
 
+                    b.Property<string>("RequestId")
+                        .HasColumnType("text");
+
                     b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("TelegramMessageId")
                         .HasColumnType("integer");
 
                     b.Property<int>("VenueId")
@@ -210,7 +250,28 @@ namespace bnmini_crm.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("About")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("DeliveryFee")
+                        .HasColumnType("numeric");
+
+                    b.Property<bool>("IsOpen")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("LogoUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ManagerPassword")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
@@ -298,6 +359,17 @@ namespace bnmini_crm.Migrations
                     b.Navigation("Venue");
                 });
 
+            modelBuilder.Entity("bnmini_crm.Models.ItemImage", b =>
+                {
+                    b.HasOne("bnmini_crm.Models.Item", "Item")
+                        .WithMany("Images")
+                        .HasForeignKey("ItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Item");
+                });
+
             modelBuilder.Entity("bnmini_crm.Models.Order", b =>
                 {
                     b.HasOne("bnmini_crm.Models.AppUser", "AppUser")
@@ -360,6 +432,11 @@ namespace bnmini_crm.Migrations
                     b.Navigation("Addresses");
 
                     b.Navigation("VenueUsers");
+                });
+
+            modelBuilder.Entity("bnmini_crm.Models.Item", b =>
+                {
+                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("bnmini_crm.Models.Order", b =>

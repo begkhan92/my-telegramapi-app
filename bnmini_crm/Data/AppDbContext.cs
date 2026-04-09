@@ -15,6 +15,7 @@ namespace bnmini_crm.Data
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
         public DbSet<DeliveryAddress> DeliveryAddresses => Set<DeliveryAddress>();
         public DbSet<Category> Categories => Set<Category>();
+        public DbSet<ItemImage> ItemImages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -1,0 +1,1212 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Управление</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #f0f0f5;
+            font-family: -apple-system, 'SF Pro Text', 'Segoe UI', sans-serif;
+        }
+
+        #app {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: #f0f0f5;
+            padding-bottom: 48px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 80px 0;
+            font-size: 15px;
+            color: #8e8e93;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #e0e0e5;
+            border-top-color: #007aff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .auth {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            gap: 8px;
+        }
+
+        .auth-icon {
+            font-size: 48px;
+        }
+
+        .auth-title {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .auth-sub {
+            font-size: 14px;
+            color: #8e8e93;
+        }
+
+        .header {
+            background: #fff;
+            padding: 20px 16px 16px;
+            border-bottom: 1px solid #e5e5ea;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .header-sub {
+            font-size: 13px;
+            color: #8e8e93;
+            margin-top: 2px;
+        }
+
+        .header-badge {
+            background: #007aff;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 8px;
+            border-radius: 8px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 14px 16px 0;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 14px 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+        }
+
+        .stat-wide {
+            grid-column: span 2;
+        }
+
+        .stat-row {
+            display: flex;
+            align-items: center;
+        }
+
+        .stat-item {
+            flex: 1;
+        }
+
+        .stat-divider {
+            width: 1px;
+            height: 36px;
+            background: #e5e5ea;
+            margin: 0 16px;
+            flex-shrink: 0;
+        }
+
+        .stat-val {
+            font-size: 22px;
+            font-weight: 700;
+            color: #000;
+            line-height: 1.1;
+        }
+
+            .stat-val.blue {
+                color: #007aff;
+            }
+
+            .stat-val.green {
+                color: #34c759;
+            }
+
+        .stat-label {
+            font-size: 11px;
+            color: #8e8e93;
+            margin-top: 3px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            padding: 14px 16px 0;
+        }
+        .venue-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 14px 16px 0;
+            background: #fff;
+            border-radius: 16px;
+            padding: 14px 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+        }
+
+        .status-toggle {
+            padding: 9px 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+            .status-toggle.open {
+                background: #ff3b30;
+                color: #fff;
+            }
+
+            .status-toggle.closed {
+                background: #34c759;
+                color: #fff;
+            }
+
+        .btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 14px 10px;
+            border: none;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #007aff;
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #fff;
+            color: #007aff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        .section-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #8e8e93;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 16px 16px 8px;
+        }
+
+        .tg-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 0 16px;
+        }
+
+        .tg-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 13px 14px;
+            background: #fff;
+            border: none;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+        }
+
+            .tg-btn:disabled {
+                opacity: 0.45;
+                cursor: not-allowed;
+            }
+
+        .report-status {
+            margin: 10px 16px 0;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .status-ok {
+            background: #d4f5e0;
+            color: #1a7f3c;
+        }
+
+        .status-err {
+            background: #ffe4e4;
+            color: #c0392b;
+        }
+
+        .section {
+            margin: 14px 16px 0;
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .empty {
+            font-size: 14px;
+            color: #8e8e93;
+            padding: 8px 0;
+        }
+
+        .revenue-row {
+            display: flex;
+            align-items: center;
+            padding: 9px 0;
+            border-bottom: 1px solid #f2f2f7;
+            gap: 8px;
+        }
+
+        .revenue-name {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .revenue-qty {
+            font-size: 13px;
+            color: #8e8e93;
+        }
+
+        .revenue-sum {
+            font-size: 14px;
+            font-weight: 600;
+            color: #007aff;
+        }
+
+        .revenue-total {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 10px;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .item-row {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f2f2f7;
+            gap: 12px;
+        }
+
+        .item-thumb {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .item-thumb-ph {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background: #f2f2f7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .item-name {
+            font-size: 15px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-meta {
+            font-size: 12px;
+            color: #8e8e93;
+            margin-top: 2px;
+        }
+
+        .item-acts {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .icon-btn {
+            width: 34px;
+            height: 34px;
+            background: #f2f2f7;
+            border: none;
+            border-radius: 50%;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.42);
+            z-index: 300;
+            display: none;
+        }
+
+        .sheet {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-radius: 20px 20px 0 0;
+            z-index: 400;
+            max-height: 92vh;
+            display: none;
+            flex-direction: column;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+            .sheet.open {
+                display: flex;
+            }
+
+        .sheet-handle {
+            width: 36px;
+            height: 4px;
+            background: #e0e0e5;
+            border-radius: 2px;
+            margin: 10px auto 0;
+            flex-shrink: 0;
+        }
+
+        .sheet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px 12px;
+            border-bottom: 1px solid #f2f2f7;
+            font-size: 17px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .sheet-close {
+            width: 28px;
+            height: 28px;
+            background: #f2f2f7;
+            border: none;
+            border-radius: 50%;
+            font-size: 13px;
+            color: #8e8e93;
+            cursor: pointer;
+        }
+
+        .sheet-body {
+            padding: 16px 20px 32px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #8e8e93;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #e0e0e5;
+            border-radius: 12px;
+            font-size: 15px;
+            color: #000;
+            outline: none;
+            background: #fafafa;
+            font-family: inherit;
+        }
+
+            .input:focus {
+                border-color: #007aff;
+                background: #fff;
+            }
+
+        textarea.input {
+            resize: vertical;
+            min-height: 72px;
+        }
+
+        .inline {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .cat-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .cat-chip {
+            padding: 6px 12px;
+            background: #f2f2f7;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1.5px solid transparent;
+        }
+
+            .cat-chip.active {
+                background: #e8f0ff;
+                border-color: #007aff;
+                color: #007aff;
+            }
+
+        .preview-wrap {
+            position: relative;
+        }
+
+        .preview {
+            width: 100%;
+            border-radius: 12px;
+            max-height: 200px;
+            object-fit: cover;
+        }
+
+        .remove-photo {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .error {
+            color: #ff3b30;
+            font-size: 13px;
+        }
+
+        .btn-full {
+            width: 100%;
+            padding: 15px;
+            background: #007aff;
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .btn-sm {
+            padding: 9px 14px;
+            background: #007aff;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-sm-cancel {
+            padding: 9px 14px;
+            background: #f2f2f7;
+            color: #000;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .btn-sm-danger {
+            padding: 9px 14px;
+            background: #ff3b30;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .cat-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 11px 0;
+            border-bottom: 1px solid #f2f2f7;
+        }
+
+        .cat-name {
+            flex: 1;
+            font-size: 15px;
+        }
+
+        .cat-count {
+            font-size: 12px;
+            color: #8e8e93;
+        }
+
+        .confirm-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            border-radius: 20px;
+            padding: 24px 20px;
+            z-index: 500;
+            width: calc(100% - 48px);
+            max-width: 340px;
+            text-align: center;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .confirm-title {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .confirm-sub {
+            font-size: 14px;
+            color: #8e8e93;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .confirm-acts {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <input type="file" id="file-input" accept="image/*" style="display:none" />
+
+    <div id="app">
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <span>Загрузка...</span>
+        </div>
+        <div id="auth" style="display:none" class="auth">
+            <div class="auth-icon">🔐</div>
+            <div class="auth-title">Доступ запрещён</div>
+            <div class="auth-sub">Неверный токен</div>
+        </div>
+        <div id="main" style="display:none">
+            <div class="header">
+                <div>
+                    <div class="header-title" id="venue-name"></div>
+                    <div class="header-sub">Панель управления</div>
+                </div>
+                <div class="header-badge">MGR</div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card stat-wide">
+                    <div class="stat-row">
+                        <div class="stat-item"><div class="stat-val" id="s-orders-today">0</div><div class="stat-label">Заказов сегодня</div></div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-item"><div class="stat-val" id="s-orders-total">0</div><div class="stat-label">Всего заказов</div></div>
+                    </div>
+                </div>
+                <div class="stat-card stat-wide">
+                    <div class="stat-row">
+                        <div class="stat-item"><div class="stat-val blue" id="s-rev-today">0 м</div><div class="stat-label">Выручка сегодня</div></div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-item"><div class="stat-val blue" id="s-rev-total">0 м</div><div class="stat-label">Выручка всего</div></div>
+                    </div>
+                </div>
+                <div class="stat-card"><div class="stat-val green" id="s-avg">0 м</div><div class="stat-label">Средний чек</div></div>
+                <div class="stat-card">
+                    <div class="stat-row">
+                        <div class="stat-item"><div class="stat-val" id="s-users-today">0</div><div class="stat-label">Новых</div></div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-item"><div class="stat-val" id="s-users-total">0</div><div class="stat-label">Клиентов</div></div>
+                    </div>
+                </div>
+                <div class="stat-card"><div class="stat-val" id="s-items">0</div><div class="stat-label">Товаров</div></div>
+                <div class="stat-card"><div class="stat-val" id="s-cats">0</div><div class="stat-label">Категорий</div></div>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-primary" onclick="openAddItem()">➕ Добавить товар</button>
+                <button class="btn btn-secondary" onclick="openCategories()">📂 Категории</button>
+            </div>
+            <div class="venue-status" id="venue-status-wrap">
+                <span id="venue-status-label">🟢 Открыто</span>
+                <button class="status-toggle open" id="status-toggle" onclick="toggleStatus()">
+                    Закрыть заведение
+                </button>
+            </div>
+
+            <div class="section-label">📊 Отчёты в Telegram</div>
+            <div class="tg-actions">
+                <button class="tg-btn" onclick="sendReport('revenue')">💰 Прибыль</button>
+                <button class="tg-btn" onclick="sendReport('items')">📦 По товарам</button>
+                <button class="tg-btn" onclick="sendReport('catalog')">🗂 Каталог</button>
+                <button class="tg-btn" onclick="sendReport('clients')">👥 Клиенты</button>
+            </div>
+
+            <div id="report-status" style="display:none"></div>
+
+            <div class="section">
+                <div class="section-title">📈 Выручка по товарам</div>
+                <div id="revenue-list"></div>
+            </div>
+
+            <div class="section" id="top-times-section" style="display:none">
+                <div class="section-title">⏰ Топ время заказов</div>
+                <div id="top-times-list"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">🛍 Товары</div>
+                <div id="items-list"></div>
+            </div>
+        </div>
+
+        <!-- Шит добавления/редактирования товара -->
+        <div class="overlay" id="item-overlay" onclick="closeAddItem()"></div>
+        <div class="sheet" id="item-sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-header">
+                <span id="item-sheet-title">➕ Новый товар</span>
+                <button class="sheet-close" onclick="closeAddItem()">✕</button>
+            </div>
+            <div class="sheet-body">
+                <input type="hidden" id="edit-item-id" value="" />
+                <label class="label">Название</label>
+                <input class="input" id="item-name" placeholder="Название товара" />
+                <label class="label">Описание</label>
+                <textarea class="input" id="item-desc" placeholder="Описание (необязательно)"></textarea>
+                <label class="label">Цена (м)</label>
+                <input class="input" type="number" step="0.01" id="item-price" placeholder="0.00" />
+                <label class="label">Категория</label>
+                <div class="cat-chips" id="item-cat-chips"></div>
+                <div class="inline" style="margin-top:8px">
+                    <input class="input" id="new-cat-inline" placeholder="Новая категория..." />
+                    <button class="btn-sm" onclick="addCategoryInline()">+</button>
+                </div>
+                <div class="inline" style="margin-top:8px">
+                    <label class="label">Фото (макс. 7)</label>
+                    <button class="btn-sm" id="upload-btn" onclick="pickPhoto()" style="white-space:nowrap">📎 Добавить фото</button>
+                </div>
+                <div id="photos-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
+                <div class="error" id="item-error" style="display:none"></div>
+                <button class="btn-full" id="save-item-btn" onclick="saveItem()">💾 Добавить товар</button>
+            </div>
+        </div>
+
+        <!-- Шит категорий -->
+        <div class="overlay" id="cat-overlay" onclick="closeCategories()"></div>
+        <div class="sheet" id="cat-sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-header">
+                <span>📂 Категории</span>
+                <button class="sheet-close" onclick="closeCategories()">✕</button>
+            </div>
+            <div class="sheet-body">
+                <div class="inline" style="margin-bottom:12px">
+                    <input class="input" id="new-cat-name" placeholder="Название новой категории" />
+                    <button class="btn-sm" onclick="addCategory()">+</button>
+                </div>
+                <div id="cat-list"></div>
+            </div>
+        </div>
+
+        <!-- Подтверждение удаления -->
+        <div class="overlay" id="del-overlay" onclick="cancelDelete()"></div>
+        <div class="confirm-modal" id="del-modal">
+            <div class="confirm-title">Удалить товар?</div>
+            <div class="confirm-sub" id="del-sub"></div>
+            <div class="confirm-acts">
+                <button class="btn-sm-cancel" onclick="cancelDelete()">Отмена</button>
+                <button class="btn-sm-danger" onclick="confirmDelete()">Удалить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+let venueId = 0;
+let token = '';
+let categories = [];
+let items = [];
+let selectedCategoryId = 0;
+        let uploadedImageUrls = [];
+let editingItemId = null;
+let deletingItemId = null;
+let editingCatId = null;
+
+// Инициализация
+        window.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            token = params.get('token') || '';
+            const code = params.get('code') || '';
+            venueId = parseInt(params.get('venueId') || '0');
+
+            if (code) {
+                try {
+                    const resp = await fetch(`/api/manager/validate-code?code=${encodeURIComponent(code)}`);
+                    if (!resp.ok) { hide('loading'); show('auth'); return; }
+                    const data = await resp.json();
+                    token = data.token;
+                    venueId = data.venueId;
+                } catch { hide('loading'); show('auth'); return; }
+            }
+
+            if (!token || !venueId) { hide('loading'); show('auth'); return; }
+
+            try {
+                await loadAll();
+                hide('loading'); show('main');
+            } catch (e) {
+                hide('loading'); show('auth');
+            }
+        });
+
+        async function api(path, options = {}) {
+            const sep = path.includes('?') ? '&' : '?';
+            const resp = await fetch(`/api/manager${path}${sep}token=${encodeURIComponent(token)}`, options);
+            if (resp.status === 401) throw new Error('401');
+            if (!resp.ok) throw new Error(await resp.text());
+            const text = await resp.text();
+            return text ? JSON.parse(text) : null;
+        }
+        let isOpen = true;
+
+        async function loadVenueStatus() {
+            const s = await api(`/venue-status?venueId=${venueId}`);
+            isOpen = s.isOpen;
+            updateStatusUI();
+        }
+
+        function updateStatusUI() {
+            const label = document.getElementById('venue-status-label');
+            const btn = document.getElementById('status-toggle');
+            if (isOpen) {
+                label.textContent = '🟢 Открыто';
+                btn.textContent = 'Закрыть заведение';
+                btn.className = 'status-toggle open';
+            } else {
+                label.textContent = '🔴 Закрыто';
+                btn.textContent = 'Открыть заведение';
+                btn.className = 'status-toggle closed';
+            }
+        }
+
+        async function toggleStatus() {
+            const btn = document.getElementById('status-toggle');
+            btn.disabled = true;
+            btn.textContent = '⏳';
+            try {
+                const s = await api(`/toggle-status?venueId=${venueId}`, { method: 'POST' });
+                isOpen = s.isOpen;
+                updateStatusUI();
+            } catch {
+                updateStatusUI(); // восстановить если ошибка
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+async function loadAll() {
+    await loadStats();
+    await loadItems();
+    await loadStats();
+    await loadItems();
+    await loadVenueStatus();
+}
+
+async function loadStats() {
+    const s = await api(`/stats?venueId=${venueId}`);
+    document.getElementById('venue-name').textContent = s.venueName;
+    document.getElementById('s-orders-today').textContent = s.ordersToday;
+    document.getElementById('s-orders-total').textContent = s.ordersTotal;
+    document.getElementById('s-rev-today').textContent = s.revenueToday.toFixed(0) + ' м';
+    document.getElementById('s-rev-total').textContent = s.revenueTotal.toFixed(0) + ' м';
+    document.getElementById('s-avg').textContent = s.avgCheck.toFixed(0) + ' м';
+    document.getElementById('s-users-today').textContent = s.usersToday;
+    document.getElementById('s-users-total').textContent = s.usersTotal;
+    document.getElementById('s-items').textContent = s.itemsCount;
+    document.getElementById('s-cats').textContent = s.categoriesCount;
+
+    const revList = document.getElementById('revenue-list');
+    if (!s.itemRevenue.length) {
+        revList.innerHTML = '<div class="empty">Заказов пока нет</div>';
+    } else {
+        revList.innerHTML = s.itemRevenue.map(i =>
+            `<div class="revenue-row">
+                <span class="revenue-name">${i.name}</span>
+                <span class="revenue-qty">×${i.qty}</span>
+                <span class="revenue-sum">${i.sum.toFixed(2)} м</span>
+            </div>`
+        ).join('') + `<div class="revenue-total"><span>Итого</span><span>${s.revenueTotal.toFixed(2)} м</span></div>`;
+    }
+
+    const timeSec = document.getElementById('top-times-section');
+    if (s.topTimes.length) {
+        timeSec.style.display = 'block';
+        document.getElementById('top-times-list').innerHTML = s.topTimes.map(t =>
+            `<div class="revenue-row"><span class="revenue-name">${t.hour}:00 — ${t.hour+1}:00</span><span class="revenue-sum">${t.count} зак.</span></div>`
+        ).join('');
+    }
+
+    categories = await api(`/categories?venueId=${venueId}`);
+}
+
+async function loadItems() {
+    items = await api(`/items?venueId=${venueId}`);
+    const list = document.getElementById('items-list');
+    if (!items.length) { list.innerHTML = '<div class="empty">Товаров пока нет</div>'; return; }
+    list.innerHTML = items.map(item => {
+        const cat = categories.find(c => c.id === item.categoryId);
+        const img = item.imageUrl
+            ? `<img class="item-thumb" src="${item.imageUrl}" alt="${item.name}" />`
+            : `<div class="item-thumb-ph">📦</div>`;
+        return `<div class="item-row">
+            ${img}
+            <div class="item-info">
+                <div class="item-name">${item.name}</div>
+                <div class="item-meta">${cat?.name ?? '—'} · ${item.price.toFixed(2)} м</div>
+            </div>
+            <div class="item-acts">
+                <button class="icon-btn" onclick="openEditItem(${item.id})">✏️</button>
+                <button class="icon-btn" onclick="openDeleteItem(${item.id}, '${item.name.replace(/'/g,"\\'")}')">🗑</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// Товары
+function openAddItem() {
+    editingItemId = null;
+    uploadedImageUrls = [];
+    renderPhotosList();
+    document.getElementById('edit-item-id').value = '';
+    document.getElementById('item-name').value = '';
+    document.getElementById('item-desc').value = '';
+    document.getElementById('item-price').value = '';
+    document.getElementById('item-sheet-title').textContent = '➕ Новый товар';
+    document.getElementById('save-item-btn').textContent = '💾 Добавить товар';
+    uploadedImageUrls = [];
+    renderPhotosList();
+    document.getElementById('item-error').style.display = 'none';
+    selectedCategoryId = categories[0]?.id ?? 0;
+    renderCatChips();
+    openSheet('item');
+}
+
+        function openEditItem(id) {
+            const item = items.find(i => i.id === id);
+            if (!item) return;
+            editingItemId = id;
+            uploadedImageUrls = item.images?.map(img => img.url) || (item.imageUrl ? [item.imageUrl] : []);
+            renderPhotosList();
+            document.getElementById('edit-item-id').value = id;
+            document.getElementById('item-name').value = item.name;
+            document.getElementById('item-desc').value = item.description || '';
+            document.getElementById('item-price').value = item.price;
+            document.getElementById('item-sheet-title').textContent = '✏️ Редактировать';
+            document.getElementById('save-item-btn').textContent = '💾 Сохранить изменения';
+            document.getElementById('item-error').style.display = 'none';
+            selectedCategoryId = item.categoryId ?? (categories[0]?.id ?? 0);
+            renderCatChips();
+            openSheet('item');
+        }
+function closeAddItem() { closeSheet('item'); }
+
+function renderCatChips() {
+    const chips = document.getElementById('item-cat-chips');
+    chips.innerHTML = categories.map(cat =>
+        `<div class="cat-chip ${selectedCategoryId === cat.id ? 'active' : ''}" onclick="selectCat(${cat.id})">${cat.name}</div>`
+    ).join('');
+}
+
+function selectCat(id) {
+    selectedCategoryId = id;
+    renderCatChips();
+}
+
+async function addCategoryInline() {
+    const name = document.getElementById('new-cat-inline').value.trim();
+    if (!name) return;
+    await api(`/save-category`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ venueId, name })
+    });
+    document.getElementById('new-cat-inline').value = '';
+    categories = await api(`/categories?venueId=${venueId}`);
+    selectedCategoryId = categories[categories.length - 1]?.id ?? 0;
+    renderCatChips();
+}
+
+        async function pickPhoto() {
+            if (uploadedImageUrls.length >= 7) {
+                alert('Максимум 7 фото');
+                return;
+            }
+            const input = document.getElementById('file-input');
+            input.value = '';
+            input.onchange = async () => {
+                if (!input.files?.length) return;
+                const btn = document.getElementById('upload-btn');
+                btn.textContent = '⏳ Загрузка...';
+                btn.disabled = true;
+                const formData = new FormData();
+                formData.append('file', input.files[0]);
+                try {
+                    const resp = await fetch('/api/upload/item-image', { method: 'POST', body: formData });
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        uploadedImageUrls.push(data.url);
+                        renderPhotosList();
+                    }
+                } catch { }
+                btn.textContent = '📎 Добавить фото';
+                btn.disabled = false;
+            };
+            input.click();
+        }
+
+        function renderPhotosList() {
+            const list = document.getElementById('photos-list');
+            list.innerHTML = uploadedImageUrls.map((url, i) => `
+        <div style="position:relative;width:80px;height:80px">
+            <img src="${url}" style="width:80px;height:80px;border-radius:10px;object-fit:cover" />
+            <button onclick="removePhoto(${i})" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+        </div>
+    `).join('');
+        }
+
+        function removePhoto(index) {
+            uploadedImageUrls.splice(index, 1);
+            renderPhotosList();
+        }
+
+async function saveItem() {
+    const name = document.getElementById('item-name').value.trim();
+    const desc = document.getElementById('item-desc').value.trim();
+    const price = parseFloat(document.getElementById('item-price').value);
+    const errEl = document.getElementById('item-error');
+
+    if (!name) { showError(errEl, 'Введите название'); return; }
+    if (!price || price <= 0) { showError(errEl, 'Введите цену больше нуля'); return; }
+
+    errEl.style.display = 'none';
+    const btn = document.getElementById('save-item-btn');
+    btn.disabled = true; btn.textContent = '⏳ Сохранение...';
+
+    try {
+        await api(`/save-item`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: editingItemId,
+                venueId,
+                name,
+                description: desc || null,
+                price,
+                categoryId: selectedCategoryId || null,
+                imageUrl: uploadedImageUrls[0] || null,
+                imageUrls: uploadedImageUrls
+            })
+        });
+        closeAddItem();
+        await loadAll();
+    } catch(e) {
+        showError(errEl, 'Ошибка сохранения');
+       
+    } finally {
+        btn.disabled = false;
+        btn.textContent = editingItemId ? '💾 Сохранить изменения' : '💾 Добавить товар';
+    }
+}
+
+function openDeleteItem(id, name) {
+    deletingItemId = id;
+    document.getElementById('del-sub').textContent = `«${name}» будет удалён без возможности восстановления`;
+    document.getElementById('del-overlay').style.display = 'block';
+    document.getElementById('del-modal').style.display = 'block';
+}
+
+function cancelDelete() {
+    deletingItemId = null;
+    document.getElementById('del-overlay').style.display = 'none';
+    document.getElementById('del-modal').style.display = 'none';
+}
+
+async function confirmDelete() {
+    if (!deletingItemId) return;
+    try {
+        await api(`/delete-item/${deletingItemId}`, { method: 'DELETE' });
+        cancelDelete();
+        await loadAll();
+    } catch {}
+}
+
+// Категории
+function openCategories() {
+    renderCatList();
+    openSheet('cat');
+}
+
+function closeCategories() { closeSheet('cat'); }
+
+function renderCatList() {
+    const list = document.getElementById('cat-list');
+    list.innerHTML = categories.map(cat => {
+        if (editingCatId === cat.id) {
+            return `<div class="cat-row">
+                <input class="input" id="edit-cat-${cat.id}" value="${cat.name}" style="flex:1" />
+                <button class="btn-sm" onclick="saveCat(${cat.id})">✓</button>
+                <button class="btn-sm-cancel" onclick="cancelEditCat()">✕</button>
+            </div>`;
+        }
+        const hasItems = items.some(i => i.categoryId === cat.id);
+        return `<div class="cat-row">
+            <span class="cat-name">${cat.name}</span>
+            <span class="cat-count">${hasItems ? 'есть товары' : 'пусто'}</span>
+            <button class="icon-btn" onclick="startEditCat(${cat.id})">✏️</button>
+            ${!hasItems ? `<button class="icon-btn" onclick="deleteCat(${cat.id})">🗑</button>` : ''}
+        </div>`;
+    }).join('');
+}
+
+function startEditCat(id) { editingCatId = id; renderCatList(); }
+function cancelEditCat() { editingCatId = null; renderCatList(); }
+
+async function saveCat(id) {
+    const name = document.getElementById(`edit-cat-${id}`).value.trim();
+    if (!name) return;
+    await api(`/save-category`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, venueId, name })
+    });
+    editingCatId = null;
+    categories = await api(`/categories?venueId=${venueId}`);
+    renderCatList();
+    await loadItems();
+}
+
+async function addCategory() {
+    const name = document.getElementById('new-cat-name').value.trim();
+    if (!name) return;
+    await api(`/save-category`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ venueId, name })
+    });
+    document.getElementById('new-cat-name').value = '';
+    categories = await api(`/categories?venueId=${venueId}`);
+    renderCatList();
+}
+
+async function deleteCat(id) {
+    try {
+        await api(`/delete-category/${id}`, { method: 'DELETE' });
+        categories = await api(`/categories?venueId=${venueId}`);
+        renderCatList();
+    } catch {}
+}
+
+// Отчёты
+async function sendReport(type) {
+    const btns = document.querySelectorAll('.tg-btn');
+    btns.forEach(b => b.disabled = true);
+    const statusEl = document.getElementById('report-status');
+    statusEl.style.display = 'none';
+    try {
+        await api(`/send-report?venueId=${venueId}&type=${type}`, { method: 'POST' });
+        statusEl.className = 'report-status status-ok';
+        statusEl.textContent = '✅ Отчёт отправлен';
+    } catch {
+        statusEl.className = 'report-status status-err';
+        statusEl.textContent = '❌ Ошибка отправки';
+    }
+    statusEl.style.display = 'block';
+    btns.forEach(b => b.disabled = false);
+    setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
+}
+
+// Утилиты
+function openSheet(name) {
+    document.getElementById(`${name}-overlay`).style.display = 'block';
+    document.getElementById(`${name}-sheet`).classList.add('open');
+}
+function closeSheet(name) {
+    document.getElementById(`${name}-overlay`).style.display = 'none';
+    document.getElementById(`${name}-sheet`).classList.remove('open');
+}
+function show(id) { document.getElementById(id).style.display = 'block'; }
+function hide(id) { document.getElementById(id).style.display = 'none'; }
+function showError(el, msg) { el.textContent = msg; el.style.display = 'block'; }
+    </script>
+</body>
+</html>
