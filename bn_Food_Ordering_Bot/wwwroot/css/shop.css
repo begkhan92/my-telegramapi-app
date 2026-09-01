@@ -1,0 +1,84 @@
+﻿/* Delivery modal */
+.delivery-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 500;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.delivery-sheet {
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+
+.delivery-body {
+    padding: 16px 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.field-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #8e8e93;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.field-input {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid #e0e0e5;
+    border-radius: 12px;
+    font-size: 15px;
+    color: #000;
+    outline: none;
+    background: #fafafa;
+    transition: border-color 0.2s;
+}
+
+    .field-input:focus {
+        border-color: #007aff;
+        background: #fff;
+    }
+
+.address-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.address-chip {
+    padding: 7px 14px;
+    background: #f2f2f7;
+    border: 1.5px solid transparent;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #000;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+    .address-chip.active {
+        background: #e8f0ff;
+        border-color: #007aff;
+        color: #007aff;
+    }
+
+.delivery-footer {
+    padding: 14px 20px 28px;
+    border-top: 1px solid #f2f2f7;
+    display: flex;
+    gap: 10px;
+}

@@ -1,0 +1,6 @@
+@bn_Food_Ordering_Bot_HostAddress = http://localhost:5048
+
+GET {{bn_Food_Ordering_Bot_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
